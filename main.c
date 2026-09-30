@@ -168,6 +168,7 @@ static ssize_t recv_reply_kernel_fwctl(int sock_fd)
 
 	// receive reply
 	ssize_t len = recvmsg(sock_fd, &msg, 0);
+
 	if (len < 0) {
 		perror("recvmsg");
 		return -1;
@@ -198,8 +199,8 @@ static int resolve_family_ID(ssize_t len)
 	struct nlattr *attr;
 
 	for (attr = (struct nlattr *)((char *)genlh+GENL_HDRLEN);
-	     NLA_OK(attr, remaining);
-	     attr = NLA_NEXT(attr, remaining)) {
+		     NLA_OK(attr, remaining);
+		     attr = NLA_NEXT(attr, remaining)) {
 
 	    if (attr->nla_type == CTRL_ATTR_FAMILY_ID) {
 
@@ -260,7 +261,7 @@ int main(int argc,char **argv){
 	printf("Netlink socket %d is created.\n",sock_fd);
 
 
-	/*** Netlink communication is bidirectional ***/
+	/*** Bidirectional Netlink communication ***/
 	//   fwctl <--> kernel
 	//   ask for the family ID of the Netlink family name 'FWCTL'
 
