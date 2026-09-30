@@ -217,6 +217,160 @@ static int resolve_family_ID(ssize_t len)
 	return -1;
 }
 
+static int send_add_rule_req(int sock_fd, int argc, char** argv){
+
+	memset(buffer, 0, sizeof(buffer));
+
+	// the beginning of the Netlink message --> Netlink header.
+	struct nlmsghdr *nlh =
+		(struct nlmsghdr *)buffer;
+
+	// Netlink header
+	nlh->nlmsg_len = NLMSG_LENGTH(sizeof(struct genlmsghdr));
+	nlh->nlmsg_type = fw_cmd;
+	nlh->nlmsg_flags = NLM_F_REQUEST;
+	nlh->nlmsg_seq = 1;
+	nlh->nlmsg_pid = 0;
+
+	// Generic Netlink header
+	struct genlmsghdr *genlh;
+
+	// the memory adress where Generic header starts
+	genlh = (struct genlmsghdr *)NLMSG_DATA(nlh);
+
+	genlh->cmd = FW_CMD_ADD_RULE;
+	genlh->version = 1;
+
+	// Attribute header
+	for(int cnt=2; cnt<argc; cnt+=2){
+
+		if(!strcmp(argv[cnt],"--src")){
+
+			if (add_attribute(nlh,
+				      sizeof(buffer),
+				      FW_ATTR_SRC_IP,
+				      argv[cnt+1],
+				      strlen(argv[cnt+1]) + 1) < 0) {
+
+				fprintf(stderr, "Failed to add attribute\n");
+				return -1;			
+			}
+
+			continue;
+		}
+
+		if(!strcmp(argv[cnt],"--dst")){
+
+			if (add_attribute(nlh,
+				      sizeof(buffer),
+				      FW_ATTR_DST_IP,
+				      argv[cnt+1],
+				      strlen(argv[cnt+1]) + 1) < 0) {
+
+				fprintf(stderr, "Failed to add attribute\n");
+				return -1;			
+			}
+
+			continue;
+		}
+
+		if(!strcmp(argv[cnt],"--sp")){
+
+			if (add_attribute(nlh,
+				      sizeof(buffer),
+				      FW_ATTR_SRC_PORT,
+				      argv[cnt+1],
+				      strlen(argv[cnt+1]) + 1) < 0) {
+
+				fprintf(stderr, "Failed to add attribute\n");
+				return -1;			
+			}
+
+			continue;
+		}
+
+		if(!strcmp(argv[cnt],"--dp")){	
+
+			if (add_attribute(nlh,
+				      sizeof(buffer),
+				      FW_ATTR_DST_PORT,
+				      argv[cnt+1],
+				      strlen(argv[cnt+1]) + 1) < 0) {
+
+				fprintf(stderr, "Failed to add attribute\n");
+				return -1;			
+			}
+
+			continue;
+		}
+
+		if(!strcmp(argv[cnt],"--proto")){
+
+			if (add_attribute(nlh,
+				      sizeof(buffer),
+				      FW_ATTR_PROTOCOL,
+				      argv[cnt+1],
+				      strlen(argv[cnt+1]) + 1) < 0) {
+
+				fprintf(stderr, "Failed to add attribute\n");
+				return -1;			
+			}
+
+			continue;
+		}
+
+		if(!strcmp(argv[cnt],"--action")){
+
+			if (add_attribute(nlh,
+				      sizeof(buffer),
+				      FW_ATTR_ACTION,
+				      argv[cnt+1],
+				      strlen(argv[cnt+1]) + 1) < 0) {
+
+				fprintf(stderr, "Failed to add attribute\n");
+				return -1;			
+			}
+
+			continue;
+		}
+	}
+
+	// Destination
+	struct sockaddr_nl kernel;
+	memset(&kernel, 0, sizeof(kernel));
+	kernel.nl_family = AF_NETLINK;
+
+	// memory buffer
+	struct iovec iov = {
+		.iov_base = nlh,
+		.iov_len = nlh->nlmsg_len
+	};
+
+	// description of the entire message
+	struct msghdr msg = {
+		.msg_name = &kernel,
+		.msg_namelen = sizeof(kernel),
+		.msg_iov = &iov,
+		.msg_iovlen = 1
+	};
+
+	// send request
+	if (sendmsg(sock_fd, &msg, 0) < 0) {
+		perror("sendmsg");
+		return -1;
+	}
+
+	printf("Add rule request sent\n");
+
+	return 0;
+}
+
+static int send_delete_rule_req(int sock_fd){
+}
+
+static int send_update_rule_req(int sock_fd){
+}
+
 
 int main(int argc,char **argv){
 
@@ -289,13 +443,20 @@ int main(int argc,char **argv){
 	}
 
 
+	/*** Rule table manipulation ***/
+	// add rule to the Rule table
 	if(!strcmp(argv[1],"add")){
+		send_add_rule_req(sock_fd,argc,argv);
 	}
 
+	// delete rule from the Rule table
 	if(!strcmp(argv[1],"delete")){
+		send_delete_rule_req(sock_fd);
 	}
 
+	// update rule of the Rule table
 	if(!strcmp(argv[1],"update")){
+		send_update_rule_req(sock_fd);
 	}
 
 	close(sock_fd);
