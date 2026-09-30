@@ -217,7 +217,7 @@ static int resolve_family_ID(ssize_t len)
 	return -1;
 }
 
-static int send_add_rule_req(int sock_fd, int argc, char** argv){
+static int send_add_rule_req(int sock_fd, int argc, char** argv, int family_id){
 
 	memset(buffer, 0, sizeof(buffer));
 
@@ -227,7 +227,7 @@ static int send_add_rule_req(int sock_fd, int argc, char** argv){
 
 	// Netlink header
 	nlh->nlmsg_len = NLMSG_LENGTH(sizeof(struct genlmsghdr));
-	nlh->nlmsg_type = fw_cmd;
+	nlh->nlmsg_type = family_id;
 	nlh->nlmsg_flags = NLM_F_REQUEST;
 	nlh->nlmsg_seq = 1;
 	nlh->nlmsg_pid = 0;
@@ -242,7 +242,7 @@ static int send_add_rule_req(int sock_fd, int argc, char** argv){
 	genlh->version = 1;
 
 	// Attribute header
-	for(int cnt=2; cnt<argc; cnt+=2){
+	for(int cnt=2; cnt+1<argc; cnt+=2){
 
 		if(!strcmp(argv[cnt],"--src")){
 
@@ -333,6 +333,10 @@ static int send_add_rule_req(int sock_fd, int argc, char** argv){
 
 			continue;
 		}
+
+		fprintf(stderr,"Unknown option, %s\n",argv[cnt]);
+
+		return -1;
 	}
 
 	// Destination
@@ -446,7 +450,7 @@ int main(int argc,char **argv){
 	/*** Rule table manipulation ***/
 	// add rule to the Rule table
 	if(!strcmp(argv[1],"add")){
-		send_add_rule_req(sock_fd,argc,argv);
+		send_add_rule_req(sock_fd,argc,argv,family_id);
 	}
 
 	// delete rule from the Rule table
