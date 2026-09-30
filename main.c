@@ -235,7 +235,6 @@ int main(int argc,char **argv){
 
 	int sock_fd;
 	struct sockaddr_nl local;
-	struct nlattr *attr;
 
 	// create a Netlink socket
 	sock_fd = socket(AF_NETLINK,SOCK_RAW,NETLINK_GENERIC);
@@ -267,14 +266,27 @@ int main(int argc,char **argv){
 
 	// send request 
 	// fwctl --> kernel --> Generic Netlink Controller
-	send_req_fwctl_kernel(sock_fd, "FWCTL");
+	if(send_req_fwctl_kernel(sock_fd, "FWCTL") < 0){
+		close(sock_fd);
+		return EXIT_FAILURE;
+	}
 
 	// receive reply 
 	// kernel --> fwctl
 	ssize_t len = recv_reply_kernel_fwctl(sock_fd);
 
+	if(len < 0){
+		close(sock_fd);
+		return EXIT_FAILURE;
+	}
+
 	// extract the family ID from the Netlink reply 
-	uint16_t family_id = resolve_family_ID(len);
+	int family_id = resolve_family_ID(len);
+
+	if(family_id < 0){
+		close(sock_fd);
+		return EXIT_FAILURE;
+	}
 
 
 	if(!strcmp(argv[1],"add")){
