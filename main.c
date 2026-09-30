@@ -178,7 +178,7 @@ static ssize_t recv_reply_kernel_fwctl(int sock_fd)
 	return len;
 }
 
-static uint16_t resolve_family_ID(ssize_t len)
+static int resolve_family_ID(ssize_t len)
 {
 	struct nlmsghdr *nlh =
 		(struct nlmsghdr *)buffer;
