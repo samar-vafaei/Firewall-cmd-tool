@@ -249,11 +249,13 @@ static int send_rule_req(int sock_fd, int argc, char** argv, int family_id, int 
 
 		if(!strcmp(argv[cnt],"--src")){
 
+			uint32_t srcIP = strtoul(argv[cnt+1],NULL,10);
+
 			if (add_attribute(nlh,
 				      sizeof(buffer),
 				      FW_ATTR_SRC_IP,
-				      argv[cnt+1],
-				      strlen(argv[cnt+1]) + 1) < 0) {
+				      &srcIP,
+				      sizeof(srcIP)) < 0) {
 
 				fprintf(stderr, "Failed to add attribute\n");
 				return -1;			
@@ -264,11 +266,13 @@ static int send_rule_req(int sock_fd, int argc, char** argv, int family_id, int 
 
 		if(!strcmp(argv[cnt],"--dst")){
 
+			uint32_t dstIP = strtoul(argv[cnt+1],NULL,10);
+
 			if (add_attribute(nlh,
 				      sizeof(buffer),
 				      FW_ATTR_DST_IP,
-				      argv[cnt+1],
-				      strlen(argv[cnt+1]) + 1) < 0) {
+				      &dstIP,
+				      sizeof(dstIP)) < 0) {
 
 				fprintf(stderr, "Failed to add attribute\n");
 				return -1;			
@@ -279,11 +283,13 @@ static int send_rule_req(int sock_fd, int argc, char** argv, int family_id, int 
 
 		if(!strcmp(argv[cnt],"--sp")){
 
+			uint16_t srcPORT = strtoul(argv[cnt+1],NULL,10);
+
 			if (add_attribute(nlh,
 				      sizeof(buffer),
 				      FW_ATTR_SRC_PORT,
-				      argv[cnt+1],
-				      strlen(argv[cnt+1]) + 1) < 0) {
+				      &srcPORT,
+				      sizeof(srcPORT)) < 0) {
 
 				fprintf(stderr, "Failed to add attribute\n");
 				return -1;			
@@ -294,11 +300,13 @@ static int send_rule_req(int sock_fd, int argc, char** argv, int family_id, int 
 
 		if(!strcmp(argv[cnt],"--dp")){	
 
+			uint16_t dstPORT = strtoul(argv[cnt+1],NULL,10);
+
 			if (add_attribute(nlh,
 				      sizeof(buffer),
 				      FW_ATTR_DST_PORT,
-				      argv[cnt+1],
-				      strlen(argv[cnt+1]) + 1) < 0) {
+				      &dstPORT,
+				      sizeof(dstPORT)) < 0) {
 
 				fprintf(stderr, "Failed to add attribute\n");
 				return -1;			
@@ -309,11 +317,13 @@ static int send_rule_req(int sock_fd, int argc, char** argv, int family_id, int 
 
 		if(!strcmp(argv[cnt],"--proto")){
 
+			uint8_t protocol = strtoul(argv[cnt+1],NULL,10);
+
 			if (add_attribute(nlh,
 				      sizeof(buffer),
 				      FW_ATTR_PROTOCOL,
-				      argv[cnt+1],
-				      strlen(argv[cnt+1]) + 1) < 0) {
+				      &protocol,
+				      sizeof(protocol)) < 0) {
 
 				fprintf(stderr, "Failed to add attribute\n");
 				return -1;			
@@ -324,11 +334,13 @@ static int send_rule_req(int sock_fd, int argc, char** argv, int family_id, int 
 
 		if(!strcmp(argv[cnt],"--action")){
 
+			uint8_t action = strtoul(argv[cnt+1],NULL,10);
+
 			if (add_attribute(nlh,
 				      sizeof(buffer),
 				      FW_ATTR_ACTION,
-				      argv[cnt+1],
-				      strlen(argv[cnt+1]) + 1) < 0) {
+				      &action,
+				      sizeof(action)) < 0) {
 
 				fprintf(stderr, "Failed to add attribute\n");
 				return -1;			
