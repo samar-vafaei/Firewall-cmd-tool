@@ -6,6 +6,7 @@
 #include <errno.h>
 
 #include <sys/socket.h>
+#include <arpa/inet.h>
 
 #include <linux/netlink.h>
 #include <linux/genetlink.h>
@@ -249,7 +250,11 @@ static int send_rule_req(int sock_fd, int argc, char** argv, int family_id, int 
 
 		if(!strcmp(argv[cnt],"--src")){
 
-			uint32_t srcIP = strtoul(argv[cnt+1],NULL,10);
+			uint32_t srcIP;
+		        if(inet_pton(AF_INET,argv[cnt+1],&srcIP) != 1){
+				fprintf(stderr,"Invalid source IP %s\n",argv[cnt+1]);
+				return -1;
+			}			
 
 			if (add_attribute(nlh,
 				      sizeof(buffer),
@@ -266,7 +271,11 @@ static int send_rule_req(int sock_fd, int argc, char** argv, int family_id, int 
 
 		if(!strcmp(argv[cnt],"--dst")){
 
-			uint32_t dstIP = strtoul(argv[cnt+1],NULL,10);
+			uint32_t dstIP;
+		        if(inet_pton(AF_INET,argv[cnt+1],&dstIP) != 1){
+				fprintf(stderr,"Invalid destination IP %s\n",argv[cnt+1]);
+				return -1;
+			}			
 
 			if (add_attribute(nlh,
 				      sizeof(buffer),
@@ -397,7 +406,7 @@ int main(int argc,char **argv){
 
 	if(argc < 2){
 		printf("Not enough input arguments.\n");
-		return 1;
+		return EXIT_FAILURE;
 	}
 
 	int sock_fd;
@@ -459,17 +468,26 @@ int main(int argc,char **argv){
 	/*** Rule table manipulation ***/
 	// add rule to the Rule table
 	if(!strcmp(argv[1],"add")){
-		send_rule_req(sock_fd,argc,argv,family_id,FW_CMD_ADD_RULE);
+		if(send_rule_req(sock_fd,argc,argv,family_id,FW_CMD_ADD_RULE) < 0){
+			close(sock_fd);
+			return EXIT_FAILURE;
+		}
 	}
 
 	// delete rule from the Rule table
 	if(!strcmp(argv[1],"delete")){
-		send_rule_req(sock_fd,argc,argv,family_id,FW_CMD_DELETE_RULE);
+		if(send_rule_req(sock_fd,argc,argv,family_id,FW_CMD_DELETE_RULE) < 0){
+			close(sock_fd);
+			return EXIT_FAILURE;
+		}
 	}
 
 	// update rule of the Rule table
 	if(!strcmp(argv[1],"update")){
-		send_rule_req(sock_fd,argc,argv,family_id,FW_CMD_UPDATE_RULE);
+		if(send_rule_req(sock_fd,argc,argv,family_id,FW_CMD_UPDATE_RULE) < 0){
+			close(sock_fd);
+			return EXIT_FAILURE;
+		}
 	}
 
 	close(sock_fd);
