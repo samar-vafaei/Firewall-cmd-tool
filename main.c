@@ -10,6 +10,9 @@
 #include <linux/netlink.h>
 #include <linux/genetlink.h>
 
+#include "../include/fw_uapi.h"
+
+
 #define NLA_DATA(nla) \
     ((void *)((char *)(nla) + NLA_HDRLEN))
 
@@ -217,7 +220,7 @@ static int resolve_family_ID(ssize_t len)
 	return -1;
 }
 
-static int send_add_rule_req(int sock_fd, int argc, char** argv, int family_id){
+static int send_rule_req(int sock_fd, int argc, char** argv, int family_id, int cmd){
 
 	memset(buffer, 0, sizeof(buffer));
 
@@ -238,10 +241,10 @@ static int send_add_rule_req(int sock_fd, int argc, char** argv, int family_id){
 	// the memory adress where Generic header starts
 	genlh = (struct genlmsghdr *)NLMSG_DATA(nlh);
 
-	genlh->cmd = FW_CMD_ADD_RULE;
+	genlh->cmd = cmd;
 	genlh->version = 1;
 
-	// Attribute header
+	// add Attribute header and data 
 	for(int cnt=2; cnt+1<argc; cnt+=2){
 
 		if(!strcmp(argv[cnt],"--src")){
@@ -364,15 +367,9 @@ static int send_add_rule_req(int sock_fd, int argc, char** argv, int family_id){
 		return -1;
 	}
 
-	printf("Add rule request sent\n");
+	printf("The %d rule request sent\n",cmd);
 
 	return 0;
-}
-
-static int send_delete_rule_req(int sock_fd){
-}
-
-static int send_update_rule_req(int sock_fd){
 }
 
 
@@ -450,17 +447,17 @@ int main(int argc,char **argv){
 	/*** Rule table manipulation ***/
 	// add rule to the Rule table
 	if(!strcmp(argv[1],"add")){
-		send_add_rule_req(sock_fd,argc,argv,family_id);
+		send_rule_req(sock_fd,argc,argv,family_id,FW_CMD_ADD_RULE);
 	}
 
 	// delete rule from the Rule table
 	if(!strcmp(argv[1],"delete")){
-		send_delete_rule_req(sock_fd);
+		send_rule_req(sock_fd,argc,argv,family_id,FW_CMD_DELETE_RULE);
 	}
 
 	// update rule of the Rule table
 	if(!strcmp(argv[1],"update")){
-		send_update_rule_req(sock_fd);
+		send_rule_req(sock_fd,argc,argv,family_id,FW_CMD_UPDATE_RULE);
 	}
 
 	close(sock_fd);
